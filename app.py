@@ -552,6 +552,10 @@ def halaman_wondrcast():
     _, isi, sumber = st.session_state.insight[kunci]
 
     st.caption(f"Sumber teks: {'AI (Gemini)' if sumber == 'AI' else 'Template (AI tidak aktif atau gagal)'}")
+    x, y = st.columns([1, 6])
+    x.image(avatar(gender, pr["b"]["status"] == "Aman"), width=90)
+    y.info(f"**Pesan dari {nama} {tahun} tahun ke depan:** {isi['pesan_diri_depan']}")
+
     st.markdown(f"### Kamu termasuk pola :orange[{label}]")
     st.write(f"Proyeksi {tahun} tahun ke depan berstatus "
              f":{WARNA_STATUS[pr['a']['status']]}[**{pr['a']['status']}**].")
@@ -565,9 +569,6 @@ def halaman_wondrcast():
             st.badge(item["fitur_wondr"], color="blue")
             st.markdown(f"**{item['aksi']}**")
             st.caption(item["alasan"])
-    x, y = st.columns([1, 6])
-    x.image(avatar(gender, pr["b"]["status"] == "Aman"), width=90)
-    y.info(f"**Pesan dari {nama} {tahun} tahun ke depan:** {isi['pesan_diri_depan']}")
 
     # chat lanjutan (KN-10)
     st.subheader(f"Ngobrol dengan {nama} {tahun} tahun ke depan")
