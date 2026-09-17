@@ -28,15 +28,27 @@ section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div {
     background-color: #FFFFFF !important;
 }
 section[data-testid="stSidebar"] hr {border-color: #E0EE59 !important;}
-[data-testid="stLogo"] {height: 4.5rem !important; width: auto !important;}
+[data-testid="stLogo"] {height: 9rem !important; width: auto !important;}
 div[data-baseweb="modal"] {
-    background-color: transparent !important;
-    backdrop-filter: blur(6px) !important;
+    background-color: rgba(255,255,255,0.25) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
 }
 div[data-testid="stDialog"] {background-color: #FFFFFF !important;}
-[data-testid="stChatMessage"], [data-testid="stChatInput"], [data-testid="stChatInput"] textarea {
+[data-testid="stChatMessage"], [data-testid="stChatInput"] {
     background-color: #FFFFFF !important;
     border: 1px solid rgba(255,133,0,0.5) !important;
+}
+[data-testid="stChatInput"] textarea {
+    background-color: #FFFFFF !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+[data-testid="stChatInput"] textarea:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
 }
 </style>""", unsafe_allow_html=True)
 
