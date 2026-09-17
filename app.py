@@ -28,14 +28,15 @@ section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div {
     background-color: #FFFFFF !important;
 }
 section[data-testid="stSidebar"] hr {border-color: #E0EE59 !important;}
-[data-testid="stLogo"] {height: 3.2rem !important; width: auto !important;}
+[data-testid="stLogo"] {height: 4.5rem !important; width: auto !important;}
 div[data-baseweb="modal"] {
-    background-color: rgba(255,255,255,0.6) !important;
+    background-color: transparent !important;
     backdrop-filter: blur(6px) !important;
 }
 div[data-testid="stDialog"] {background-color: #FFFFFF !important;}
 [data-testid="stChatMessage"], [data-testid="stChatInput"], [data-testid="stChatInput"] textarea {
     background-color: #FFFFFF !important;
+    border: 1px solid rgba(255,133,0,0.5) !important;
 }
 </style>""", unsafe_allow_html=True)
 
