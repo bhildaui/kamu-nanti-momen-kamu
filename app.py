@@ -41,7 +41,7 @@ DEFAULT_STATE = {
     "page": "Beranda", "sumber": "Nasabah dummy", "klaim": {}, "events": [],
     "popup_shown": set(), "hide_until": {}, "popup_idx": 0, "popup_aktif": None, "chat": {}, "insight": {},
     "advice_teks": {}, "as_r": 4, "as_g": 5, "as_inf": 3, "as_hemat": 20, "as_tahun": 10,
-    "as_basis": "pendapatan",
+    "as_basis": "pendapatan", "input_disubmit": False,
 }
 for k, v in DEFAULT_STATE.items():
     st.session_state.setdefault(k, v)
@@ -117,45 +117,42 @@ def grafik_proyeksi(seri, tahun_proyeksi):
     ).properties(height=320)
 
 
-# ---------------------------------------------------------------- form input manual (sidebar)
+# ---------------------------------------------------------------- form input manual (halaman Data Nasabah)
 def isi_skenario(nama_skenario):
     for k, v in D.SKENARIO[nama_skenario].items():
         st.session_state[f"f_{k}"] = v
 
 
 def form_input():
-    """Form input manual, dirancang untuk sidebar (satu kolom, dikelompokkan
-    lewat expander agar tidak terlalu panjang)."""
-    st.caption("Pilih skenario cepat untuk isi otomatis, atau isi sendiri di bawah.")
-    kol = st.columns(2)
-    for i, nama_s in enumerate(D.SKENARIO):
-        kol[i % 2].button(nama_s, on_click=isi_skenario, args=(nama_s,), width="stretch")
+    """Form input manual, tampil langsung di halaman Data Nasabah (bukan di
+    sidebar atau di belakang tab lain)."""
+    st.write("Pilih skenario cepat untuk mengisi form otomatis, atau isi sendiri.")
+    for kol, nama_s in zip(st.columns(4), D.SKENARIO):
+        kol.button(nama_s, on_click=isi_skenario, args=(nama_s,), width="stretch")
 
     jaga_state(*[f"f_{k}" for k in D.DEFAULT])
     with st.form("form_input"):
-        with st.expander("Profil dasar", expanded=True):
-            st.text_input("Nama", key="f_nama", max_chars=20)
-            st.number_input("Usia", 18, 45, key="f_usia")
-            st.selectbox("Jenis kelamin avatar", ["pria", "wanita"], key="f_jenis_kelamin")
-            st.number_input("Pendapatan bulanan (Rp)", 0, 200_000_000, step=500_000, key="f_pendapatan")
-            st.number_input("Saldo saat ini (Rp)", 0, 2_000_000_000, step=500_000, key="f_saldo")
-            st.text_input("Tujuan hidup", key="f_tujuan")
-            st.number_input("Usia target tujuan", 19, 80, key="f_usia_target")
+        a, b, c = st.columns(3)
+        a.text_input("Nama", key="f_nama", max_chars=20)
+        a.number_input("Usia", 18, 45, key="f_usia")
+        a.selectbox("Jenis kelamin avatar", ["pria", "wanita"], key="f_jenis_kelamin")
+        a.number_input("Pendapatan bulanan (Rp)", 0, 200_000_000, step=500_000, key="f_pendapatan")
+        a.number_input("Saldo saat ini (Rp)", 0, 2_000_000_000, step=500_000, key="f_saldo")
+        a.text_input("Tujuan hidup", key="f_tujuan")
+        a.number_input("Usia target tujuan", 19, 80, key="f_usia_target")
 
-        with st.expander("Pengeluaran per bulan (Rp)"):
-            for kat in D.KATEGORI_FORM:
-                st.number_input(kat, 0, 100_000_000, step=50_000, key=f"f_{kat}")
+        b.markdown("**Pengeluaran per bulan (Rp)**")
+        for kat in D.KATEGORI_FORM:
+            b.number_input(kat, 0, 100_000_000, step=50_000, key=f"f_{kat}")
 
-        with st.expander("Kebiasaan lainnya"):
-            st.number_input("Frekuensi kopi per bulan", 0, 60, key="f_frek_kopi")
-            st.selectbox("Merchant kopi favorit",
-                        merchant[merchant.kategori == "Kopi"].merchant_nama.tolist(), key="f_merchant_kopi")
-            st.slider("Porsi gaji ke e-wallet (%)", 0, 100, key="f_porsi_ewallet")
-            st.number_input("Setoran tabungan per bulan (Rp)", 0, 100_000_000, step=100_000, key="f_setoran")
-            st.number_input("Cicilan per bulan (Rp)", 0, 100_000_000, step=100_000, key="f_cicilan")
-            st.toggle("Lonjakan minggu ini", key="f_lonjakan")
-            st.selectbox("Kategori lonjakan", E.KAT_MERCHANT, key="f_kategori_lonjakan")
-
+        c.number_input("Frekuensi kopi per bulan", 0, 60, key="f_frek_kopi")
+        c.selectbox("Merchant kopi favorit",
+                    merchant[merchant.kategori == "Kopi"].merchant_nama.tolist(), key="f_merchant_kopi")
+        c.slider("Porsi gaji ke e-wallet (%)", 0, 100, key="f_porsi_ewallet")
+        c.number_input("Setoran tabungan per bulan (Rp)", 0, 100_000_000, step=100_000, key="f_setoran")
+        c.number_input("Cicilan per bulan (Rp)", 0, 100_000_000, step=100_000, key="f_cicilan")
+        c.toggle("Lonjakan minggu ini", key="f_lonjakan")
+        c.selectbox("Kategori lonjakan", E.KAT_MERCHANT, key="f_kategori_lonjakan")
         kirim = st.form_submit_button("Proses data", type="primary", width="stretch")
 
     if kirim:
@@ -166,6 +163,7 @@ def form_input():
                 st.error(e)
             return
         st.session_state.input_data = D.buat_transaksi(nilai, merchant)
+        st.session_state.input_disubmit = True
         st.session_state.sumber_to = "Input manual"
         st.session_state.nav_to = "Beranda"
         st.rerun()
@@ -186,8 +184,9 @@ with st.sidebar:
         uid = pilihan.split(" · ")[0]
     else:
         uid = "INPUT"
-        with st.expander("Isi data nasabah", expanded="input_data" not in st.session_state):
-            form_input()
+        if not st.session_state.input_disubmit and st.session_state.page != "Data Nasabah":
+            st.session_state.nav_to = "Data Nasabah"
+            st.rerun()
 
     st.divider()
     st.caption("Semua nasabah, transaksi, merchant, dan promo adalah data dummy. "
@@ -533,6 +532,10 @@ def halaman_momen():
 
 def halaman_data():
     st.title("Data Nasabah")
+    if st.session_state.sumber == "Input manual":
+        with st.expander("Input data nasabah", expanded=not st.session_state.input_disubmit):
+            form_input()
+        st.divider()
     tab1, tab2 = st.tabs(["Profil dan transaksi", "Daftar nasabah"])
     with tab1:
         st.caption(f"Nasabah aktif: {kunci}")
