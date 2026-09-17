@@ -29,6 +29,14 @@ section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div {
 }
 section[data-testid="stSidebar"] hr {border-color: #E0EE59 !important;}
 [data-testid="stLogo"] {height: 9rem !important; width: auto !important;}
+/* backdrop pop-up: elemen fixed fullscreen ini adalah lapisan DI BELAKANG
+   kotak dialog (kotak dialog putih ada di elemen anak terpisah, sudah
+   solid & tajam secara native -- jadi cukup blur di sini saja). */
+[data-testid="stDialog"] {
+    background-color: rgba(255,255,255,0.35) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
 [data-testid="stChatMessage"], [data-testid="stChatInput"] {
     background-color: #FFFFFF !important;
     border: 1px solid rgba(255,133,0,0.5) !important;
