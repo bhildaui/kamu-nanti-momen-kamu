@@ -28,6 +28,7 @@ section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div {
     background-color: #FFFFFF !important;
 }
 section[data-testid="stSidebar"] hr {border-color: #E0EE59 !important;}
+[data-testid="stLogo"] {height: 3.2rem !important; width: auto !important;}
 </style>""", unsafe_allow_html=True)
 
 
