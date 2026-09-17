@@ -40,7 +40,7 @@ cek("AC-KN3", sumber == "Template" and L.validasi_insight(isi, payload["fitur_wo
 jawaban = [None, json.dumps({"ringkasan": "ok",
                              "insight": [{"judul": "a", "penjelasan": "b", "data": "c"}] * 3,
                              "saran": [{"aksi": "a", "fitur_wondr": "Life Goals", "alasan": "c"}] * 3,
-                             "pesan_diri_60": "halo"})]
+                             "pesan_diri_depan": "halo"})]
 L.panggil = lambda *a, **k: jawaban.pop(0)
 isi, sumber = L.buat_insight(payload, api_key="palsu")
 cek("B6.4", sumber == "AI", "Percobaan pertama gagal, percobaan ulang valid dipakai")

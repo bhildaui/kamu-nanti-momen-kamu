@@ -184,7 +184,7 @@ def popup():
         st.badge(momen["level"], color=WARNA_LEVEL[momen["level"]])
         st.subheader(momen["judul"])
         st.write(momen["pesan"])
-        st.caption(f"Pesan dari {nama} usia 60 · momen {i + 1} dari {len(daftar)} · teks: {sumber}")
+        st.caption(f"Pesan dari {nama} 10 tahun ke depan · momen {i + 1} dari {len(daftar)} · teks: {sumber}")
 
     if st.button(momen["label_tombol"], type="primary", width="stretch"):
         catat(momen["id"], "klik")
@@ -249,7 +249,7 @@ def halaman_beranda():
         st.markdown("#### WondrCast")
         x, y = st.columns([1, 2])
         x.image(avatar(gender, pr["a"]["status"] == "Aman"), width=110)
-        y.badge(f"Status usia 60: {pr['a']['status']}", color=WARNA_STATUS[pr["a"]["status"]])
+        y.badge(f"Status 10 tahun ke depan: {pr['a']['status']}", color=WARNA_STATUS[pr["a"]["status"]])
         y.write(f"Pola keuanganmu: **{label}**")
         y.write(f"Proyeksi kebiasaan sekarang: **{E.rupiah(pr['a']['nominal'])}**")
         if st.button("Lihat WondrCast", width="stretch"):
@@ -295,13 +295,11 @@ def kartu_skenario(kolom, judul, s, setoran):
 
 def halaman_wondrcast():
     st.title("WondrCast")
-    st.write(f"Gambaran keuangan **{nama}** di usia 60 berdasarkan transaksi 90 hari terakhir.")
+    st.write(f"Gambaran keuangan **{nama}** 10 tahun ke depan berdasarkan transaksi 90 hari terakhir.")
     st.badge(f"Pola: {label}", color="violet")
     if pr["data_terbatas"]:
         st.warning("Pengeluaran yang tercatat kurang dari 20% pemasukan. Kemungkinan sebagian transaksi "
                    "terjadi di luar wondr, sehingga proyeksi bisa terlalu optimistis.")
-    if int(profil["usia"]) >= 60:
-        st.info("Usia nasabah sudah 60 tahun atau lebih. Proyeksi menampilkan saldo saat ini.")
 
     k1, k2, k3 = st.columns([1, 1, 1.2])
     kartu_skenario(k1, "A. Kebiasaan tetap", pr["a"], pr["setoran_a"])
@@ -313,12 +311,12 @@ def halaman_wondrcast():
         st.slider("Imbal hasil tabungan per tahun (%)", 0, 10, key="as_r")
         st.slider("Kenaikan pendapatan per tahun (%)", 0, 10, key="as_g")
         st.slider("Inflasi per tahun (%)", 0, 10, key="as_inf")
-        st.selectbox("Dasar kebutuhan pensiun", ["pendapatan", "pengeluaran"], key="as_basis",
+        st.selectbox("Dasar target dana", ["pendapatan", "pengeluaran"], key="as_basis",
                      help="Dokumen requirement memakai pengeluaran. Default pendapatan agar nasabah "
                           "yang jarang bertransaksi tidak terlihat terlalu aman.")
 
-    st.line_chart(pr["seri"], x_label="Usia", y_label="Saldo (Rp)")
-    st.caption(f"Kebutuhan dana pensiun: {E.rupiah(pr['kebutuhan'])} (nilai hari ini). "
+    st.line_chart(pr["seri"], x_label="Usia (10 tahun ke depan)", y_label="Saldo (Rp)")
+    st.caption(f"Target dana: {E.rupiah(pr['kebutuhan'])} (nilai hari ini). "
                "Simulasi, bukan nasihat keuangan profesional. Asumsi adalah angka ilustratif tim, bukan angka resmi BNI.")
 
     with st.expander("Asumsi dan metrik perilaku"):
@@ -367,16 +365,16 @@ def halaman_wondrcast():
             st.caption(item["alasan"])
     x, y = st.columns([1, 6])
     x.image(avatar(gender, pr["b"]["status"] == "Aman"), width=90)
-    y.info(f"**Pesan dari {nama} usia 60:** {isi['pesan_diri_60']}")
+    y.info(f"**Pesan dari {nama} 10 tahun ke depan:** {isi['pesan_diri_depan']}")
 
     # chat lanjutan (KN-10)
-    st.subheader(f"Ngobrol dengan {nama} usia 60")
+    st.subheader(f"Ngobrol dengan {nama} 10 tahun ke depan")
     riwayat = st.session_state.chat.setdefault(kunci, [])
-    ava_60 = avatar(gender, pr["a"]["status"] == "Aman")
+    ava_depan = avatar(gender, pr["a"]["status"] == "Aman")
     for pesan in riwayat:
-        with st.chat_message(pesan["role"], avatar=ava_60 if pesan["role"] == "assistant" else None):
+        with st.chat_message(pesan["role"], avatar=ava_depan if pesan["role"] == "assistant" else None):
             st.write(pesan["content"])
-    tanya = st.chat_input("Tanya dirimu di usia 60...")
+    tanya = st.chat_input("Tanya dirimu 10 tahun ke depan...")
     if tanya:
         riwayat.append({"role": "user", "content": tanya})
         with st.spinner("Mengetik..."):

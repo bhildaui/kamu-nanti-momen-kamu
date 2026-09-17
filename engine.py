@@ -28,8 +28,8 @@ AMBANG = {
 }
 
 ASUMSI = {"r": 0.04, "g": 0.05, "inflasi": 0.03, "hemat": 0.20,
-          "rasio_pensiun": 0.70, "lama_pensiun": 20,
-          # dasar kebutuhan pensiun. Dokumen B5.3 memakai "pengeluaran"; default "pendapatan"
+          "rasio_target": 1.00, "bulan_target": 12,   # target dana umum: 1x pendapatan/pengeluaran bulanan
+          # dasar target dana. Dokumen B5.3 memakai "pengeluaran"; default "pendapatan"
           # karena pengeluaran yang tercatat bisa sangat kecil (nasabah jarang transaksi).
           "basis_kebutuhan": "pendapatan"}
 URUTAN_ATURAN = {f"R{i}": i for i in range(1, 8)}
@@ -257,7 +257,7 @@ def _status(kecukupan, setoran_awal):
 
 def proyeksi(m, usia, asumsi=None):
     a = {**ASUMSI, **(asumsi or {})}
-    bulan = max(0, (60 - int(usia)) * 12)
+    bulan = 120  # horizon tetap 10 tahun ke depan, sama untuk semua usia
     setoran_a = m["pemasukan"] - m["pengeluaran"]
     setoran_b = setoran_a + a["hemat"] * m["konsumtif"]
     saldo_a = saldo_b = m["saldo"]
@@ -273,7 +273,7 @@ def proyeksi(m, usia, asumsi=None):
 
     tahun = bulan / 12
     dasar = m["pemasukan"] if a["basis_kebutuhan"] == "pendapatan" else m["pengeluaran"]
-    kebutuhan = dasar * a["rasio_pensiun"] * 12 * a["lama_pensiun"]
+    kebutuhan = dasar * a["rasio_target"] * a["bulan_target"]
     hasil = {"asumsi": a, "tahun": tahun, "kebutuhan": kebutuhan,
              "data_terbatas": m["pengeluaran"] < BATAS_DATA_TERBATAS * m["pemasukan"],
              "setoran_a": setoran_a, "setoran_b": setoran_b,
@@ -293,8 +293,8 @@ def tabel_asumsi(a):
         ["Kenaikan pendapatan", persen(a["g"]) + " per tahun", "Ya"],
         ["Inflasi", persen(a["inflasi"]) + " per tahun", "Ya"],
         ["Porsi hemat skenario B", persen(a["hemat"]) + " dari pengeluaran konsumtif", "Ya"],
-        ["Kebutuhan pensiun per bulan", persen(a["rasio_pensiun"]) + " " + a["basis_kebutuhan"] + " saat ini", "Tidak"],
-        ["Lama masa pensiun", f"{a['lama_pensiun']} tahun", "Tidak"],
+        ["Rasio target dana", persen(a["rasio_target"]) + " dari " + a["basis_kebutuhan"] + " bulanan", "Tidak"],
+        ["Lama target dana", f"{a['bulan_target']} bulan", "Tidak"],
     ], columns=["Asumsi", "Nilai", "Dapat diubah"])
 
 
@@ -517,7 +517,7 @@ def payload_llm(profil, hasil):
         },
         "kategori_dominan": dom,
         "proyeksi": {
-            "usia_target": 60,
+            "tahun_ke_depan": 10,
             "skenario_a": rupiah(pr["a"]["nominal"]),
             "skenario_b": rupiah(pr["b"]["nominal"]),
             "nilai_riil_a": rupiah(pr["a"]["riil"]),
