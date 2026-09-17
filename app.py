@@ -29,12 +29,6 @@ section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div {
 }
 section[data-testid="stSidebar"] hr {border-color: #E0EE59 !important;}
 [data-testid="stLogo"] {height: 9rem !important; width: auto !important;}
-div[data-baseweb="modal"] {
-    background-color: rgba(255,255,255,0.25) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-}
-div[data-testid="stDialog"] {background-color: #FFFFFF !important;}
 [data-testid="stChatMessage"], [data-testid="stChatInput"] {
     background-color: #FFFFFF !important;
     border: 1px solid rgba(255,133,0,0.5) !important;
