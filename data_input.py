@@ -124,7 +124,8 @@ def buat_transaksi(v, merchant, seed=7):
     tr["saldo_setelah"] = (saldo_awal + kumulatif).round()
 
     profil = pd.Series({
-        "user_id": "INPUT", "nama": v["nama"].strip(), "usia": int(v["usia"]), "kota": v["kota"],
+        "user_id": "INPUT", "nama": v["nama"].strip(), "gender": v["jenis_kelamin"],
+        "usia": int(v["usia"]), "kota": v["kota"],
         "pekerjaan": "Input demo", "pendapatan_bulanan": v["pendapatan"],
         "saldo_saat_ini": float(tr.saldo_setelah.iloc[-1]) if len(tr) else v["saldo"],
         "tujuan": v["tujuan"] or "Belum diisi", "usia_target_tujuan": int(v["usia_target"]),

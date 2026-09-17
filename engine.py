@@ -38,9 +38,6 @@ BATAS_DATA_TERBATAS = 0.20   # pengeluaran tercatat < 20% pemasukan = data trans
 PRIORITAS = {"Kritis": 1, "Waktu": 2, "Peringatan": 3, "Peluang": 4}
 METODE_PROMO = {"QRIS wondr": "QRIS", "Debit BNI": "Debit"}
 
-# jenis kelamin avatar default (data nasabah tidak memuat kolom ini)
-GENDER_DEFAULT = {"U001": "pria", "U002": "pria", "U003": "wanita", "U004": "pria", "U005": "wanita"}
-
 
 def rupiah(x):
     tanda = "-" if x < 0 else ""
@@ -67,13 +64,6 @@ def load_data():
     for k in ["merchant_id", "merchant_nama"]:
         transaksi[k] = transaksi[k].fillna("")
     return nasabah, transaksi, merchant, promo
-
-
-def gender_default(user_id):
-    if user_id in GENDER_DEFAULT:
-        return GENDER_DEFAULT[user_id]
-    angka = "".join(c for c in str(user_id) if c.isdigit()) or "0"
-    return "pria" if int(angka) % 2 == 0 else "wanita"
 
 
 # ---------------------------------------------------------------- B5.1 metrik

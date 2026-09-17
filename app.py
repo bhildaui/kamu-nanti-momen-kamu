@@ -98,8 +98,6 @@ with st.sidebar:
         if "input_data" not in st.session_state:
             st.info("Isi form di menu Data Nasabah > Input manual.")
 
-    st.session_state.setdefault(f"gender_{uid}", E.gender_default(uid))
-    st.selectbox("Avatar", ["pria", "wanita"], key=f"gender_{uid}")
     st.text_input("API key Gemini (opsional)", type="password", key="api_key",
                   help="Tanpa key, insight dan pesan memakai template.")
     st.caption("Semua nasabah, transaksi, merchant, dan promo adalah data dummy. "
@@ -110,7 +108,6 @@ try:
     api_key = api_key or st.secrets.get("GEMINI_API_KEY")
 except Exception:
     pass
-gender = st.session_state[f"gender_{uid}"]
 
 # ---------------------------------------------------------------- nasabah aktif
 if uid == "INPUT":
@@ -123,6 +120,7 @@ else:
     transaksi = trx_per_user[uid]
     kunci = uid
 st.session_state.kunci = kunci
+gender = profil["gender"]
 
 asumsi = {"r": st.session_state.as_r / 100, "g": st.session_state.as_g / 100,
           "inflasi": st.session_state.as_inf / 100, "hemat": st.session_state.as_hemat / 100,
@@ -463,7 +461,6 @@ def form_input():
                 st.error(e)
             return
         st.session_state.input_data = D.buat_transaksi(nilai, merchant)
-        st.session_state["gender_INPUT"] = nilai["jenis_kelamin"]
         st.session_state.sumber_to = "Input manual"
         st.session_state.nav_to = "Beranda"
         st.rerun()

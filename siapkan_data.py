@@ -5,7 +5,7 @@ import pandas as pd
 
 DATA = Path(__file__).parent / "data"
 KOLOM = {
-    "nasabah": ["user_id", "nama", "usia", "kota", "pekerjaan", "pendapatan_bulanan",
+    "nasabah": ["user_id", "nama", "gender", "usia", "kota", "pekerjaan", "pendapatan_bulanan",
                 "saldo_saat_ini", "tujuan", "usia_target_tujuan", "persona"],
     "transaksi": ["trx_id", "user_id", "tanggal_waktu", "arah", "kategori", "merchant_id",
                   "merchant_nama", "metode", "tujuan", "nominal", "saldo_setelah"],
