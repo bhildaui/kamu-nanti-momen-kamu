@@ -23,8 +23,11 @@ st.markdown("""<style>
 .block-container {padding-top: 2rem;}
 .kecil {font-size: 0.85rem; color: #6b7280;}
 .angka {font-size: 1.6rem; font-weight: 700; margin: 0;}
-section[data-testid="stSidebar"] {border-right: 3px solid #FF8500; background-color: rgba(62,216,212,0.5);}
-section[data-testid="stSidebar"] hr {border-color: #E0EE59;}
+section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div {
+    border-right: 3px solid #FF8500 !important;
+    background-color: rgba(62,216,212,0.5) !important;
+}
+section[data-testid="stSidebar"] hr {border-color: #E0EE59 !important;}
 </style>""", unsafe_allow_html=True)
 
 
