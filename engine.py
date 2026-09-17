@@ -202,7 +202,9 @@ def indikator_risiko(m):
     saving = _clamp01(m["rasio_menabung"] / (2 * AMBANG["disiplin"])) * 100
     spending = (_clamp01(m["porsi_konsumtif"] / (2 * AMBANG["konsumtif"]))
                 + _clamp01(m["rasio_cicilan"] / (2 * AMBANG["cicilan"]))) / 2 * 100
-    kesehatan = _clamp01((m["rasio_pengeluaran"] - 0.7) / (1.3 - 0.7)) * 100
+    # 0.30 = pengeluaran sangat rendah (median nasabah nyata ~0,65), 100% tepat
+    # di ambang label Defisit (AMBANG["defisit"]) supaya konsisten satu aplikasi.
+    kesehatan = _clamp01((m["rasio_pengeluaran"] - 0.30) / (AMBANG["defisit"] - 0.30)) * 100
     risiko = (_clamp01(bulan_buffer / 6)
               + (1 - _clamp01(m["rasio_cicilan"] / AMBANG["cicilan"]))) / 2 * 100
 
