@@ -31,11 +31,17 @@ section[data-testid="stSidebar"] hr {border-color: #E0EE59 !important;}
 [data-testid="stLogo"] {height: 9rem !important; width: auto !important;}
 /* backdrop pop-up: elemen fixed fullscreen ini adalah lapisan DI BELAKANG
    kotak dialog (kotak dialog putih ada di elemen anak terpisah, sudah
-   solid & tajam secara native -- jadi cukup blur di sini saja). */
+   solid & tajam secara native -- jadi cukup blur di sini saja).
+   Konsep Wondr: gelap transparan + blur, kotak dialog rounded-3xl dengan
+   shadow yang sangat halus. */
 [data-testid="stDialog"] {
-    background-color: rgba(255,255,255,0.35) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+    background-color: rgba(0,0,0,0.45) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+[data-testid="stDialog"] > div {
+    border-radius: 24px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
 }
 [data-testid="stChatMessage"], [data-testid="stChatInput"] {
     background-color: #FFFFFF !important;
@@ -346,10 +352,22 @@ def popup():
         pindah(momen["halaman"])
 
     if len(daftar) > 1:
-        pilih = st.slider("Momen", 1, len(daftar), i + 1, key=f"popup_slider_{kunci}")
-        if pilih - 1 != i:
-            st.session_state.popup_idx = pilih - 1
-            catat(daftar[pilih - 1]["id"], "tampil")
+        nav_kiri, dots, nav_kanan = st.columns([1, 6, 1])
+        if nav_kiri.button("‹", key="carousel_prev", width="stretch", disabled=(i == 0)):
+            st.session_state.popup_idx = i - 1
+            catat(daftar[i - 1]["id"], "tampil")
+            st.rerun()
+        titik = "".join(
+            f"<span style='display:inline-block;width:{9 if j == i else 7}px;"
+            f"height:{9 if j == i else 7}px;border-radius:50%;margin:0 4px;"
+            f"background:{'#FF8500' if j == i else '#e4e4e7'};'></span>"
+            for j in range(len(daftar))
+        )
+        dots.markdown(f"<div style='text-align:center;padding-top:9px;'>{titik}</div>",
+                      unsafe_allow_html=True)
+        if nav_kanan.button("›", key="carousel_next", width="stretch", disabled=(i == len(daftar) - 1)):
+            st.session_state.popup_idx = i + 1
+            catat(daftar[i + 1]["id"], "tampil")
             st.rerun()
 
     b2, b3 = st.columns(2)
