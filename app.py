@@ -29,6 +29,14 @@ section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div {
 }
 section[data-testid="stSidebar"] hr {border-color: #E0EE59 !important;}
 [data-testid="stLogo"] {height: 3.2rem !important; width: auto !important;}
+div[data-baseweb="modal"] {
+    background-color: rgba(255,255,255,0.6) !important;
+    backdrop-filter: blur(6px) !important;
+}
+div[data-testid="stDialog"] {background-color: #FFFFFF !important;}
+[data-testid="stChatMessage"], [data-testid="stChatInput"], [data-testid="stChatInput"] textarea {
+    background-color: #FFFFFF !important;
+}
 </style>""", unsafe_allow_html=True)
 
 
@@ -264,11 +272,15 @@ def popup():
     if st.button(momen["label_tombol"], type="primary", width="stretch"):
         catat(momen["id"], "klik")
         pindah(momen["halaman"])
-    b1, b2, b3 = st.columns(3)
-    if i < len(daftar) - 1 and b1.button("Berikutnya", width="stretch"):
-        st.session_state.popup_idx = i + 1
-        catat(daftar[i + 1]["id"], "tampil")
-        st.rerun()
+
+    if len(daftar) > 1:
+        pilih = st.slider("Momen", 1, len(daftar), i + 1, key=f"popup_slider_{kunci}")
+        if pilih - 1 != i:
+            st.session_state.popup_idx = pilih - 1
+            catat(daftar[pilih - 1]["id"], "tampil")
+            st.rerun()
+
+    b2, b3 = st.columns(2)
     if b2.button("Tutup", width="stretch"):
         st.session_state.popup_aktif = None
         catat(momen["id"], "tutup")
@@ -307,7 +319,6 @@ def buka_popup_jika_perlu():
 # ---------------------------------------------------------------- halaman: Beranda
 def halaman_beranda():
     st.title(f"Hai, {nama}")
-    st.caption(f"{profil['kota']} · {profil['pekerjaan']} · data per 27 September 2026")
 
     a, b, c = st.columns(3)
     a.metric("Saldo", E.rupiah(m["saldo"]))
@@ -336,7 +347,7 @@ def halaman_beranda():
             st.write("Belum ada momen penting.")
         for momen in hasil["momen"][:4]:
             st.markdown(f":{WARNA_LEVEL[momen['level']]}-badge[{momen['level']}] {momen['judul']}")
-        if st.button("Lihat semua momen", width="stretch"):
+        if st.button("Lihat semua", width="stretch"):
             pindah("WondrSaver")
 
     st.divider()
