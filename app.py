@@ -18,12 +18,12 @@ WARNA_LEVEL = {"Kritis": "red", "Waktu": "blue", "Peringatan": "orange", "Peluan
 WARNA_STATUS = {"Aman": "green", "Waspada": "orange", "Berisiko": "red"}
 
 st.set_page_config(page_title="wondr | WondrCast", layout="wide")
-st.logo(str(ASSETS / "logo_wondr.jpeg"), size="large")
+st.logo(str(ASSETS / "logo_wondr.png"), size="large")
 st.markdown("""<style>
 .block-container {padding-top: 2rem;}
 .kecil {font-size: 0.85rem; color: #6b7280;}
 .angka {font-size: 1.6rem; font-weight: 700; margin: 0;}
-section[data-testid="stSidebar"] {border-right: 3px solid #FF8500;}
+section[data-testid="stSidebar"] {border-right: 3px solid #FF8500; background-color: rgba(62,216,212,0.5);}
 section[data-testid="stSidebar"] hr {border-color: #E0EE59;}
 </style>""", unsafe_allow_html=True)
 
@@ -447,7 +447,9 @@ def halaman_wondrcast():
     _, isi, sumber = st.session_state.insight[kunci]
 
     st.caption(f"Sumber teks: {'AI (Gemini)' if sumber == 'AI' else 'Template (AI tidak aktif atau gagal)'}")
-    st.markdown(f"**{isi['ringkasan']}**")
+    st.markdown(f"### Kamu termasuk pola :orange[{label}]")
+    st.write(f"Proyeksi {tahun} tahun ke depan berstatus "
+             f":{WARNA_STATUS[pr['a']['status']]}[**{pr['a']['status']}**].")
     for kol, item in zip(st.columns(3), isi["insight"]):
         with kol.container(border=True):
             st.markdown(f"**{item['judul']}**")
