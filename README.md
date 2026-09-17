@@ -1,4 +1,4 @@
-# wondr: Kamu Nanti & Momen Kamu (MVP Hackathon)
+# wondr: WondrCast & WondrSaver (MVP Hackathon)
 
 ## Jalankan
     pip install -r requirements.txt
@@ -12,9 +12,9 @@ Taruh file .xlsx di folder data/, lalu:
     python siapkan_data.py
 
 ## Struktur
-- app.py              tampilan (Beranda + pop-up, Kamu Nanti, Momen Kamu, Data Nasabah)
-- engine.py           semua perhitungan: metrik, label, proyeksi, advice R1-R7, promo
-- llm.py              integrasi Claude: insight JSON, teks advice, chat, template cadangan
+- app.py              tampilan (Beranda + pop-up, WondrCast, WondrSaver, Data Nasabah)
+- engine.py           semua perhitungan: metrik, label, proyeksi, advice R1-R7, promo, indikator risiko
+- llm.py              integrasi Gemini: insight JSON, teks advice, chat, template cadangan
 - data_input.py       form input demo dan 4 skenario cepat
 - uji_requirement.py  uji otomatis acceptance criteria
 - siapkan_data.py     konversi Excel ke CSV

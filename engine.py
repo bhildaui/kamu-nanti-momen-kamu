@@ -1,4 +1,4 @@
-"""Engine perhitungan Kamu Nanti & Momen Kamu.
+"""Engine perhitungan WondrCast & WondrSaver.
 Semua angka dihitung di sini. LLM hanya menjelaskan hasilnya (prinsip NFR-01)."""
 from pathlib import Path
 import pandas as pd
@@ -181,6 +181,60 @@ def tabel_metrik(m):
     return pd.DataFrame(baris, columns=["Metrik", "Nilai", "Ambang", "Status"])
 
 
+def _clamp01(x):
+    return max(0.0, min(1.0, x))
+
+
+def _posisi(nilai, rendah, tinggi):
+    if nilai <= 33:
+        return f"Dominan di area {rendah} (sangat rendah menuju {tinggi})"
+    if nilai >= 67:
+        return f"Berada tinggi di area {tinggi} (jauh dari {rendah})"
+    return f"Berada di posisi tengah, antara {rendah} dan {tinggi}"
+
+
+def indikator_risiko(m):
+    """Indikator & Metrik Risiko (WondrCast): 4 posisi 0-100 dihitung dari data
+    nasabah asli, bukan angka tetap. Ambang skala memakai AMBANG yang sudah
+    dipakai metrik B5.1/B5.2 lain agar konsisten satu aplikasi."""
+    bulan_buffer = m["saldo"] / m["pengeluaran"] if m["pengeluaran"] else 99
+
+    saving = _clamp01(m["rasio_menabung"] / (2 * AMBANG["disiplin"])) * 100
+    spending = (_clamp01(m["porsi_konsumtif"] / (2 * AMBANG["konsumtif"]))
+                + _clamp01(m["rasio_cicilan"] / (2 * AMBANG["cicilan"]))) / 2 * 100
+    kesehatan = _clamp01((m["rasio_pengeluaran"] - 0.7) / (1.3 - 0.7)) * 100
+    risiko = (_clamp01(bulan_buffer / 6)
+              + (1 - _clamp01(m["rasio_cicilan"] / AMBANG["cicilan"]))) / 2 * 100
+
+    return [
+        {"kode": "saving_priority", "judul": "Saving Priority",
+         "sub": "Sets and meets savings goals", "nilai": round(saving),
+         "label_rendah": "Indulgent", "label_tinggi": "Discipline-driven",
+         "posisi": _posisi(saving, "Indulgent", "Discipline-driven"),
+         "keterangan": (f"Alokasi tabungan {persen(m['rasio_menabung'])} dari pemasukan, "
+                        + ("tergerus pengeluaran bulanan." if saving < 50 else "cukup disiplin menuju tujuan finansial."))},
+        {"kode": "spending_style", "judul": "Spending Style",
+         "sub": "Avoids excessive spending", "nilai": round(spending),
+         "label_rendah": "Paced-planning", "label_tinggi": "Impulsive",
+         "posisi": _posisi(spending, "Paced-planning", "Impulsive"),
+         "keterangan": (f"Gaya hidup {persen(m['porsi_konsumtif'])} dari pengeluaran, cicilan {persen(m['rasio_cicilan'])} dari pemasukan"
+                        + (", dipicu gaya hidup serta beban cicilan." if spending >= 50 else ", masih terkendali."))},
+        {"kode": "financial_health", "judul": "Financial Health / Deficit",
+         "sub": "Scenario projection", "nilai": round(kesehatan),
+         "label_rendah": "Fortified-secure", "label_tinggi": "Vulnerable",
+         "posisi": _posisi(kesehatan, "Fortified-secure", "Vulnerable"),
+         "keterangan": (f"Pengeluaran {persen(m['rasio_pengeluaran'])} dari pemasukan"
+                        + (", ketahanan finansial melemah." if kesehatan >= 50 else ", ketahanan finansial masih terjaga."))},
+        {"kode": "risk_tolerance", "judul": "Risk Tolerance",
+         "sub": "Prudent investment choices", "nilai": round(risiko),
+         "label_rendah": "Konservatif", "label_tinggi": "Agresif",
+         "posisi": _posisi(risiko, "Konservatif", "Agresif"),
+         "keterangan": (f"Saldo setara {bulan_buffer:.1f} bulan pengeluaran dengan cicilan {persen(m['rasio_cicilan'])} dari pemasukan"
+                        + (", kapasitas ambil risiko investasi rendah akibat keterbatasan likuiditas."
+                           if risiko < 50 else ", kapasitas ambil risiko investasi cukup baik."))},
+    ]
+
+
 # ---------------------------------------------------------------- B5.2 label
 def label_perilaku(m):
     if m["rasio_pengeluaran"] > AMBANG["defisit"]:
@@ -257,7 +311,7 @@ def daftar_advice(m):
         minus = m["keluar_30"] - m["masuk_30"]
         tambah("R1", "Kritis", "Pengeluaranmu melebihi pemasukan",
                f"Dalam 30 hari terakhir kamu minus {rupiah(minus)}. Yuk cek rincian dan pasang batas belanja.",
-               "Lihat rincian", "Kamu Nanti", minus,
+               "Lihat rincian", "WondrCast", minus,
                {"pemasukan_30_hari": rupiah(m["masuk_30"]), "pengeluaran_30_hari": rupiah(m["keluar_30"]),
                 "minus": rupiah(minus)})
     if m["saldo"] < m["pengeluaran"]:
@@ -271,7 +325,7 @@ def daftar_advice(m):
         tambah("R3", "Peringatan", f"Pengeluaran {l['kategori']} naik tajam",
                f"Pengeluaran {l['kategori']} minggu ini {rupiah(l['minggu_ini'])}, naik {persen(l['kenaikan'])} "
                f"dari rata-rata {rupiah(l['rata_mingguan'])}. Pasang batas mingguan?",
-               "Pasang batas", "Momen Kamu", l["selisih"],
+               "Pasang batas", "WondrSaver", l["selisih"],
                {"kategori": l["kategori"], "minggu_ini": rupiah(l["minggu_ini"]),
                 "rata_mingguan": rupiah(l["rata_mingguan"]), "kenaikan": persen(l["kenaikan"])})
         break  # satu advice R3 untuk kategori dengan lonjakan terbesar
@@ -279,7 +333,7 @@ def daftar_advice(m):
         tambah("R4", "Peringatan", "Pengeluaran gaya hidup cukup besar",
                f"{persen(m['porsi_konsumtif'])} pengeluaranmu untuk kopi, hiburan, dan belanja online. "
                "Lihat simulasi kalau sebagian dihemat.",
-               "Lihat simulasi hemat", "Kamu Nanti", m["konsumtif"],
+               "Lihat simulasi hemat", "WondrCast", m["konsumtif"],
                {"porsi_konsumtif": persen(m["porsi_konsumtif"]), "konsumtif_bulanan": rupiah(m["konsumtif"])})
     if m["numpang_lewat"] > AMBANG["numpang"]:
         nominal = m["numpang_lewat"] * (m["gaji_terakhir"].nominal if m["gaji_terakhir"] is not None else 0)
@@ -290,7 +344,7 @@ def daftar_advice(m):
     if m["rasio_cicilan"] > AMBANG["cicilan"]:
         tambah("R6", "Peringatan", "Cicilanmu cukup berat",
                f"Cicilanmu {persen(m['rasio_cicilan'])} dari pemasukan. Cek simulasi sebelum menambah cicilan baru.",
-               "Lihat simulasi", "Kamu Nanti", m["cicilan"],
+               "Lihat simulasi", "WondrCast", m["cicilan"],
                {"rasio_cicilan": persen(m["rasio_cicilan"]), "cicilan_bulanan": rupiah(m["cicilan"])})
     g = m["gaji_terakhir"]
     ada_r1 = any(x["id"] == "R1" for x in adv)       # hindari saran menabung saat sedang defisit
@@ -408,7 +462,7 @@ def momen_promo(p):
     return {"id": p["promo_id"], "jenis": "promo", "level": "Peluang", "prioritas": PRIORITAS["Peluang"],
             "judul": p["judul"],
             "pesan": f"{p['alasan']}. Bayar pakai {p['metode_bayar']}, hemat sampai {rupiah(p['estimasi_hemat'])} per bulan.",
-            "label_tombol": "Lihat promo", "halaman": "Momen Kamu", "dampak": p["estimasi_hemat"],
+            "label_tombol": "Lihat promo", "halaman": "WondrSaver", "dampak": p["estimasi_hemat"],
             "angka": {"estimasi_hemat": rupiah(p["estimasi_hemat"]), "merchant": p["merchant"]}}
 
 
@@ -436,7 +490,8 @@ def analisis(tr, profil, promo, merchant, asumsi=None, klaim=None):
     lolos, ditahan, tidak_aktif = cocokkan_promo(tr, m, label, profil, promo, merchant, klaim, kritis)
     return {"metrik": m, "label": label, "proyeksi": proyeksi(m, profil["usia"], asumsi),
             "advice": adv, "kritis": kritis, "promo": lolos, "promo_ditahan": ditahan,
-            "promo_tidak_aktif": tidak_aktif, "momen": urutkan_momen(adv, lolos)}
+            "promo_tidak_aktif": tidak_aktif, "momen": urutkan_momen(adv, lolos),
+            "indikator": indikator_risiko(m)}
 
 
 

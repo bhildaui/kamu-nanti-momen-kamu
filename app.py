@@ -1,4 +1,4 @@
-"""Demo MVP wondr: Kamu Nanti & Momen Kamu. Jalankan: streamlit run app.py"""
+"""Demo MVP wondr: WondrCast & WondrSaver. Jalankan: streamlit run app.py"""
 import hashlib
 import json
 from datetime import datetime, timedelta
@@ -12,11 +12,11 @@ import engine as E
 import llm as L
 
 ASSETS = Path(__file__).parent / "assets"
-HALAMAN = ["Beranda", "Kamu Nanti", "Momen Kamu", "Data Nasabah"]
+HALAMAN = ["Beranda", "WondrCast", "WondrSaver", "Data Nasabah"]
 WARNA_LEVEL = {"Kritis": "red", "Waktu": "blue", "Peringatan": "orange", "Peluang": "green"}
 WARNA_STATUS = {"Aman": "green", "Waspada": "orange", "Berisiko": "red"}
 
-st.set_page_config(page_title="wondr | Kamu Nanti", layout="wide")
+st.set_page_config(page_title="wondr | WondrCast", layout="wide")
 st.markdown("""<style>
 .block-container {padding-top: 2rem;}
 .kecil {font-size: 0.85rem; color: #6b7280;}
@@ -56,7 +56,7 @@ if "sumber_to" in st.session_state:
 def pindah(halaman):
     if halaman not in HALAMAN:            # fitur wondr di luar prototipe
         st.session_state.toast = f"Membuka {halaman} di wondr (simulasi)."
-        halaman = "Momen Kamu"
+        halaman = "WondrSaver"
     st.session_state.nav_to = halaman
     st.session_state.popup_aktif = None
     st.rerun()
@@ -79,10 +79,29 @@ def avatar(gender, senang):
     return str(ASSETS / f"{gender}_{'senang' if senang else 'sedih'}.png")
 
 
+def bar_gauge(nilai):
+    """Bar gaya wondr: pill oranye, badge bulat berisi persen di ujung isian,
+    bulatan emas tetap di ujung kanan sebagai penanda batas maksimum."""
+    nilai = max(0, min(100, nilai))
+    return f"""
+    <div style="position:relative;height:34px;margin:6px 0 2px;
+                background:#FBEBD3;border-radius:17px;">
+      <div style="position:absolute;left:0;top:0;height:34px;width:{nilai}%;
+                  background:linear-gradient(90deg,#F2994A,#F7C08A);border-radius:17px;"></div>
+      <div style="position:absolute;left:{nilai}%;top:50%;transform:translate(-50%,-50%);
+                  width:38px;height:38px;border-radius:50%;background:#E8763C;color:white;
+                  display:flex;align-items:center;justify-content:center;font-weight:700;
+                  font-size:11px;box-shadow:0 2px 4px rgba(0,0,0,.18);">{nilai}%</div>
+      <div style="position:absolute;right:2px;top:50%;transform:translate(0,-50%);
+                  width:24px;height:24px;border-radius:50%;background:#F4B740;
+                  box-shadow:0 1px 3px rgba(0,0,0,.18);"></div>
+    </div>"""
+
+
 # ---------------------------------------------------------------- sidebar
 with st.sidebar:
     st.markdown("## wondr")
-    st.caption("Prototipe Kamu Nanti & Momen Kamu")
+    st.caption("Prototipe WondrCast & WondrSaver")
     st.radio("Menu", HALAMAN, key="page")
     st.divider()
     st.radio("Sumber data", ["Nasabah dummy", "Input manual"], key="sumber")
@@ -144,7 +163,7 @@ def teks_momen(momen):
     return momen, "Engine"
 
 
-# ---------------------------------------------------------------- pop-up Momen Kamu
+# ---------------------------------------------------------------- pop-up WondrSaver
 def tutup_x():
     st.session_state.popup_aktif = None
     daftar = E.pilih_popup(hasil["momen"])
@@ -152,7 +171,7 @@ def tutup_x():
         catat(daftar[min(st.session_state.popup_idx, len(daftar) - 1)]["id"], "tutup")
 
 
-@st.dialog("Momen Kamu", width="medium", on_dismiss=tutup_x)
+@st.dialog("WondrSaver", width="medium", on_dismiss=tutup_x)
 def popup():
     daftar = E.pilih_popup(hasil["momen"])
     i = min(st.session_state.popup_idx, len(daftar) - 1)
@@ -227,23 +246,23 @@ def halaman_beranda():
 
     kiri, kanan = st.columns(2)
     with kiri.container(border=True):
-        st.markdown("#### Kamu Nanti")
+        st.markdown("#### WondrCast")
         x, y = st.columns([1, 2])
         x.image(avatar(gender, pr["a"]["status"] == "Aman"), width=110)
         y.badge(f"Status usia 60: {pr['a']['status']}", color=WARNA_STATUS[pr["a"]["status"]])
         y.write(f"Pola keuanganmu: **{label}**")
         y.write(f"Proyeksi kebiasaan sekarang: **{E.rupiah(pr['a']['nominal'])}**")
-        if st.button("Lihat Kamu Nanti", width="stretch"):
-            pindah("Kamu Nanti")
+        if st.button("Lihat WondrCast", width="stretch"):
+            pindah("WondrCast")
 
     with kanan.container(border=True):
-        st.markdown("#### Momen Kamu")
+        st.markdown("#### WondrSaver")
         if not hasil["momen"]:
             st.write("Belum ada momen penting.")
         for momen in hasil["momen"][:4]:
             st.markdown(f":{WARNA_LEVEL[momen['level']]}-badge[{momen['level']}] {momen['judul']}")
         if st.button("Lihat semua momen", width="stretch"):
-            pindah("Momen Kamu")
+            pindah("WondrSaver")
 
     st.divider()
     d1, d2 = st.columns(2)
@@ -260,7 +279,7 @@ def halaman_beranda():
     buka_popup_jika_perlu()
 
 
-# ---------------------------------------------------------------- halaman: Kamu Nanti
+# ---------------------------------------------------------------- halaman: WondrCast
 def kartu_skenario(kolom, judul, s, setoran):
     with kolom.container(border=True):
         st.markdown(f"**{judul}**")
@@ -274,8 +293,8 @@ def kartu_skenario(kolom, judul, s, setoran):
             st.error(s["catatan"])
 
 
-def halaman_kamu_nanti():
-    st.title("Kamu Nanti")
+def halaman_wondrcast():
+    st.title("WondrCast")
     st.write(f"Gambaran keuangan **{nama}** di usia 60 berdasarkan transaksi 90 hari terakhir.")
     st.badge(f"Pola: {label}", color="violet")
     if pr["data_terbatas"]:
@@ -307,6 +326,17 @@ def halaman_kamu_nanti():
         a.dataframe(E.tabel_asumsi(pr["asumsi"]), hide_index=True, width="stretch")
         b.dataframe(E.tabel_metrik(m), hide_index=True, width="stretch")
 
+    # indikator & metrik risiko
+    st.subheader("Indikator & Metrik Risiko")
+    for ind in hasil["indikator"]:
+        with st.container(border=True):
+            kiri, kanan = st.columns([1, 2.2])
+            kiri.markdown(f"**{ind['judul']}**")
+            kiri.caption(ind["sub"])
+            kanan.markdown(bar_gauge(ind["nilai"]), unsafe_allow_html=True)
+            kanan.caption(f"{ind['label_rendah']} → {ind['label_tinggi']} · {ind['posisi']}")
+            kanan.write(ind["keterangan"])
+
     # insight LLM (B6)
     st.subheader("Insight keuangan")
     teks_payload = json.dumps(payload, ensure_ascii=False, sort_keys=True)
@@ -323,7 +353,7 @@ def halaman_kamu_nanti():
         st.session_state.insight[kunci] = (teks_payload, isi, sumber)
     _, isi, sumber = st.session_state.insight[kunci]
 
-    st.caption(f"Sumber teks: {'AI (Claude)' if sumber == 'AI' else 'Template (AI tidak aktif atau gagal)'}")
+    st.caption(f"Sumber teks: {'AI (Gemini)' if sumber == 'AI' else 'Template (AI tidak aktif atau gagal)'}")
     st.markdown(f"**{isi['ringkasan']}**")
     for kol, item in zip(st.columns(3), isi["insight"]):
         with kol.container(border=True):
@@ -355,9 +385,9 @@ def halaman_kamu_nanti():
         st.rerun()
 
 
-# ---------------------------------------------------------------- halaman: Momen Kamu
+# ---------------------------------------------------------------- halaman: WondrSaver
 def halaman_momen():
-    st.title("Momen Kamu")
+    st.title("WondrSaver")
     st.caption("Semua momen dan promo untuk nasabah ini, termasuk yang tidak masuk pop-up.")
 
     st.subheader("Momen dan saran")
@@ -495,5 +525,5 @@ def halaman_data():
         st.caption("Pilih nasabah lewat panel kiri. Label di aplikasi dihitung ulang dari transaksi.")
 
 
-{"Beranda": halaman_beranda, "Kamu Nanti": halaman_kamu_nanti,
- "Momen Kamu": halaman_momen, "Data Nasabah": halaman_data}[st.session_state.page]()
+{"Beranda": halaman_beranda, "WondrCast": halaman_wondrcast,
+ "WondrSaver": halaman_momen, "Data Nasabah": halaman_data}[st.session_state.page]()
