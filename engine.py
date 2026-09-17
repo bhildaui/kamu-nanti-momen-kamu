@@ -27,7 +27,7 @@ AMBANG = {
     "gaji_baru_hari": 7,       # R7
 }
 
-ASUMSI = {"r": 0.04, "g": 0.05, "inflasi": 0.03, "hemat": 0.20,
+ASUMSI = {"r": 0.04, "g": 0.05, "inflasi": 0.03, "hemat": 0.20, "tahun_proyeksi": 10,
           "rasio_target": 1.00, "bulan_target": 12,   # target dana umum: 1x pendapatan/pengeluaran bulanan
           # dasar target dana. Dokumen B5.3 memakai "pengeluaran"; default "pendapatan"
           # karena pengeluaran yang tercatat bisa sangat kecil (nasabah jarang transaksi).
@@ -299,7 +299,7 @@ def _status(kecukupan, setoran_awal):
 
 def proyeksi(m, usia, asumsi=None):
     a = {**ASUMSI, **(asumsi or {})}
-    bulan = 120  # horizon tetap 10 tahun ke depan, sama untuk semua usia
+    bulan = int(a["tahun_proyeksi"] * 12)  # horizon bisa diatur, sama untuk semua usia
     setoran_a = m["pemasukan"] - m["pengeluaran"]
     setoran_b = setoran_a + a["hemat"] * m["konsumtif"]
     saldo_a = saldo_b = m["saldo"]
@@ -331,6 +331,7 @@ def proyeksi(m, usia, asumsi=None):
 
 def tabel_asumsi(a):
     return pd.DataFrame([
+        ["Proyeksi", f"{a['tahun_proyeksi']} tahun ke depan", "Ya"],
         ["Imbal hasil tabungan", persen(a["r"]) + " per tahun", "Ya"],
         ["Kenaikan pendapatan", persen(a["g"]) + " per tahun", "Ya"],
         ["Inflasi", persen(a["inflasi"]) + " per tahun", "Ya"],
@@ -560,7 +561,7 @@ def payload_llm(profil, hasil):
         },
         "kategori_dominan": dom,
         "proyeksi": {
-            "tahun_ke_depan": 10,
+            "tahun_ke_depan": int(pr["tahun"]),
             "skenario_a": rupiah(pr["a"]["nominal"]),
             "skenario_b": rupiah(pr["b"]["nominal"]),
             "nilai_riil_a": rupiah(pr["a"]["riil"]),

@@ -107,6 +107,7 @@ def validasi_insight(hasil, fitur):
 
 def template_insight(p):
     m, pr, label = p["metrik"], p["proyeksi"], p["label_perilaku"]
+    tahun = pr["tahun_ke_depan"]
     dom = p["kategori_dominan"][0] if p["kategori_dominan"] else None
     fitur = FITUR_PER_LABEL.get(label, FITUR_PER_LABEL["Berkembang"])
     insight = [
@@ -117,7 +118,7 @@ def template_insight(p):
          "penjelasan": (f"Transaksi paling sering ada di {dom['kategori']}, {dom['frekuensi']} kali dalam 30 hari."
                         if dom else f"Pengeluaran bulananmu {m['pengeluaran_bulanan']}."),
          "data": dom["nominal_teks"] if dom else m["pengeluaran_bulanan"]},
-        {"judul": "Proyeksi 10 tahun ke depan",
+        {"judul": f"Proyeksi {tahun} tahun ke depan",
          "penjelasan": f"Dengan kebiasaan sekarang, statusmu {pr['status_a']} dengan kecukupan {pr['kecukupan_a']}.",
          "data": f"Skenario A {pr['skenario_a']}"},
     ]
@@ -130,15 +131,15 @@ def template_insight(p):
     }
     saran = [{"aksi": saran_teks[f], "fitur_wondr": f, "alasan": f"Sesuai pola {label} kamu"} for f in fitur]
     pesan = {
-        "Defisit": f"Aku kamu 10 tahun dari sekarang. Dulu pengeluaran kita sempat lebih besar dari pemasukan. "
+        "Defisit": f"Aku kamu {tahun} tahun dari sekarang. Dulu pengeluaran kita sempat lebih besar dari pemasukan. "
                    f"Begitu kita mulai mengatur ulang, jalan ke depan jadi lebih ringan. Mulai dari satu langkah kecil hari ini.",
-        "Aman": f"Aku kamu 10 tahun dari sekarang. Kebiasaan baikmu sekarang membuatku tenang. Pertahankan, ya.",
+        "Aman": f"Aku kamu {tahun} tahun dari sekarang. Kebiasaan baikmu sekarang membuatku tenang. Pertahankan, ya.",
     }
     teks = pesan["Defisit"] if label == "Defisit" else (
         pesan["Aman"] if pr["status_a"] == "Aman" else
-        f"Aku kamu 10 tahun dari sekarang. Kalau kebiasaan diperbaiki sedikit, proyeksi kita bisa naik ke {pr['skenario_b']}. "
+        f"Aku kamu {tahun} tahun dari sekarang. Kalau kebiasaan diperbaiki sedikit, proyeksi kita bisa naik ke {pr['skenario_b']}. "
         f"Itu kemungkinan, bukan ramalan. Keputusannya ada di tanganmu hari ini.")
-    return {"ringkasan": f"Kamu termasuk pola {label}. Proyeksi 10 tahun ke depan berstatus {pr['status_a']}.",
+    return {"ringkasan": f"Kamu termasuk pola {label}. Proyeksi {tahun} tahun ke depan berstatus {pr['status_a']}.",
             "insight": insight, "saran": saran, "pesan_diri_depan": teks}
 
 
@@ -148,7 +149,8 @@ def buat_insight(payload, api_key=None):
 {ATURAN_UMUM}
 - Tepat 3 insight dan tepat 3 saran.
 - fitur_wondr hanya boleh salah satu dari: {", ".join(payload["fitur_wondr"])}.
-- ringkasan maksimal 30 kata. pesan_diri_depan maksimal 60 kata, sudut pandang orang pertama sebagai {payload["nama"]} 10 tahun dari sekarang.
+- ringkasan maksimal 30 kata. pesan_diri_depan maksimal 60 kata, sudut pandang orang pertama sebagai \
+{payload["nama"]} {payload["proyeksi"]["tahun_ke_depan"]} tahun dari sekarang.
 Format:
 {{"ringkasan": "", "insight": [{{"judul": "", "penjelasan": "", "data": ""}}],
  "saran": [{{"aksi": "", "fitur_wondr": "", "alasan": ""}}], "pesan_diri_depan": ""}}"""
@@ -168,14 +170,14 @@ def validasi_advice(item):
             and _jumlah_kata(item["judul"]) <= 8 and _jumlah_kata(item["pesan"]) <= 40)
 
 
-def teks_advice(advice, label, nama, api_key=None):
+def teks_advice(advice, label, nama, tahun=10, api_key=None):
     """Kembalikan (dict id -> teks, sumber). Item yang tidak valid memakai template."""
     hasil = {a["id"]: {k: a[k] for k in ["judul", "pesan", "label_tombol"]} for a in advice}
     if not advice or not _kunci(api_key):
         return hasil, "Template"
     data = [{"id": a["id"], "level": a["level"], "angka": a["angka"],
              "aksi_default": a["label_tombol"]} for a in advice]
-    system = f"""Kamu menulis pesan pop-up singkat untuk aplikasi wondr by BNI atas nama {nama}, membayangkan dirinya 10 tahun ke depan.
+    system = f"""Kamu menulis pesan pop-up singkat untuk aplikasi wondr by BNI atas nama {nama}, membayangkan dirinya {tahun} tahun ke depan.
 {ATURAN_UMUM}
 - judul maksimal 8 kata, pesan maksimal 40 kata, label_tombol maksimal 3 kata.
 - Pola nasabah: {label}.
@@ -192,20 +194,24 @@ Format: {{"R1": {{"judul": "", "pesan": "", "label_tombol": ""}}, ...}} memakai 
 
 # ---------------------------------------------------------------- B6 chat lanjutan
 def chat(payload, riwayat, api_key=None):
-    system = f"""Kamu adalah {payload["nama"]} 10 tahun dari sekarang (usia {payload["usia"] + 10} tahun), \
-berbicara dengan dirimu yang saat ini berusia {payload["usia"]} tahun.
-Gunakan data berikut sebagai satu-satunya sumber angka:
+    tahun = payload["proyeksi"]["tahun_ke_depan"]
+    system = f"""Kamu berperan sebagai {payload["nama"]} versi {tahun} tahun dari sekarang (usia {payload["usia"] + tahun} tahun), \
+mengobrol santai dengan dirinya yang saat ini berusia {payload["usia"]} tahun.
+Data yang boleh dipakai (satu-satunya sumber angka, jangan menghitung atau membulatkan angka baru):
 {json.dumps(payload, ensure_ascii=False)}
 Aturan:
+- Jawab pertanyaan yang ditanyakan secara langsung dan spesifik. Jangan mengulang kalimat pembuka atau \
+frasa yang sama di setiap balasan -- variasikan cara bicara seperti obrolan sungguhan, bukan template.
 - Hangat, suportif, bahasa Indonesia santai, maksimal 5 kalimat.
-- Pakai hanya angka dari data. Jangan menghitung angka baru.
-- Beri satu saran konkret yang terhubung ke fitur wondr dalam data.
+- Kalau pertanyaannya soal keuangan/proyeksi, boleh sebut angka dari data. Kalau pertanyaannya hal umum \
+(kabar, sapaan, dll), jawab natural saja tanpa memaksakan angka atau proyeksi.
+- Beri satu saran konkret yang terhubung ke fitur wondr dalam data, hanya kalau relevan dengan pertanyaan.
 - Jangan merekomendasikan produk investasi spesifik.
-- Ingatkan bahwa ini kemungkinan, bukan ramalan, bila relevan."""
+- Sebut bahwa ini kemungkinan bukan ramalan HANYA saat membahas angka proyeksi, tidak perlu diulang tiap balasan."""
     teks = panggil(system, riwayat[-12:], api_key, max_tokens=500)
     if teks:
         return teks, "AI"
     pr = payload["proyeksi"]
-    return (f"Aku kamu 10 tahun dari sekarang. Dengan kebiasaan sekarang, proyeksi kita {pr['skenario_a']} "
+    return (f"Aku kamu {tahun} tahun dari sekarang. Dengan kebiasaan sekarang, proyeksi kita {pr['skenario_a']} "
             f"dengan status {pr['status_a']}. Kalau kebiasaan diperbaiki, bisa menjadi {pr['skenario_b']}. "
             "Ini kemungkinan, bukan ramalan. Aktifkan AI untuk ngobrol lebih jauh."), "Template"
