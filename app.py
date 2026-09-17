@@ -25,7 +25,7 @@ st.markdown("""<style>
 .angka {font-size: 1.6rem; font-weight: 700; margin: 0;}
 section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div {
     border-right: 3px solid #FF8500 !important;
-    background-color: rgba(62,216,212,0.5) !important;
+    background-color: #FFFFFF !important;
 }
 section[data-testid="stSidebar"] hr {border-color: #E0EE59 !important;}
 </style>""", unsafe_allow_html=True)
