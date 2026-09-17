@@ -335,6 +335,13 @@ def halaman_wondrcast():
             kanan.caption(f"{ind['label_rendah']} → {ind['label_tinggi']} · {ind['posisi']}")
             kanan.write(ind["keterangan"])
 
+    for saran in hasil["saran_indikator"]:
+        with st.container(border=True):
+            if saran["fitur_wondr"]:
+                st.badge(saran["fitur_wondr"], color="orange")
+            st.markdown(f"**{saran['judul']}**")
+            st.write(saran["pesan"])
+
     # insight LLM (B6)
     st.subheader("Insight keuangan")
     teks_payload = json.dumps(payload, ensure_ascii=False, sort_keys=True)

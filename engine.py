@@ -235,6 +235,48 @@ def indikator_risiko(m):
     ]
 
 
+def saran_indikator(indikator):
+    """Saran ringkas di bawah 4 bar Indikator & Metrik Risiko. Beda dari
+    daftar_advice (R1-R7, berbasis kejadian transaksi 30 hari): ini berbasis
+    posisi keempat indikator sekaligus, dipicu saat condong ke sisi berisiko."""
+    by_kode = {i["kode"]: i for i in indikator}
+    saran = []
+
+    sp = by_kode["saving_priority"]
+    if sp["nilai"] < 40:
+        saran.append({"judul": "Naikkan porsi tabungan",
+                      "pesan": f"Saving Priority masih {sp['nilai']}%, {sp['posisi'].lower()}. "
+                               "Sisihkan otomatis lewat Life Goals begitu gaji masuk.",
+                      "fitur_wondr": "Life Goals"})
+
+    ss = by_kode["spending_style"]
+    if ss["nilai"] > 60:
+        saran.append({"judul": "Kendalikan gaya hidup dan cicilan",
+                      "pesan": f"Spending Style {ss['nilai']}%, {ss['posisi'].lower()}. "
+                               "Pantau transaksi harian lewat QRIS wondr sebelum menambah cicilan baru.",
+                      "fitur_wondr": "QRIS"})
+
+    fh = by_kode["financial_health"]
+    if fh["nilai"] > 60:
+        saran.append({"judul": "Perkuat ketahanan finansial",
+                      "pesan": f"Financial Health {fh['nilai']}%, {fh['posisi'].lower()}. "
+                               "Bayar tagihan tepat waktu dan tunda pengeluaran yang belum mendesak.",
+                      "fitur_wondr": "Bayar Tagihan"})
+
+    rt = by_kode["risk_tolerance"]
+    if rt["nilai"] < 30:
+        saran.append({"judul": "Bangun dulu bantalan likuiditas",
+                      "pesan": f"Risk Tolerance {rt['nilai']}%, {rt['posisi'].lower()}. "
+                               "Kuatkan dulu di Tabungan Berjangka sebelum ambil produk yang lebih berisiko.",
+                      "fitur_wondr": "Tabungan Berjangka"})
+
+    if not saran:
+        saran.append({"judul": "Kondisi finansialmu cukup seimbang",
+                      "pesan": "Keempat indikator berada di posisi yang wajar. Pertahankan kebiasaan ini.",
+                      "fitur_wondr": None})
+    return saran
+
+
 # ---------------------------------------------------------------- B5.2 label
 def label_perilaku(m):
     if m["rasio_pengeluaran"] > AMBANG["defisit"]:
@@ -488,10 +530,11 @@ def analisis(tr, profil, promo, merchant, asumsi=None, klaim=None):
     adv = daftar_advice(m)
     kritis = any(a["level"] == "Kritis" for a in adv)
     lolos, ditahan, tidak_aktif = cocokkan_promo(tr, m, label, profil, promo, merchant, klaim, kritis)
+    indikator = indikator_risiko(m)
     return {"metrik": m, "label": label, "proyeksi": proyeksi(m, profil["usia"], asumsi),
             "advice": adv, "kritis": kritis, "promo": lolos, "promo_ditahan": ditahan,
             "promo_tidak_aktif": tidak_aktif, "momen": urutkan_momen(adv, lolos),
-            "indikator": indikator_risiko(m)}
+            "indikator": indikator, "saran_indikator": saran_indikator(indikator)}
 
 
 
