@@ -41,6 +41,10 @@ section[data-testid="stSidebar"] hr {border-color: #E0EE59 !important;}
     background-color: #FFFFFF !important;
     border: 1px solid rgba(255,133,0,0.5) !important;
 }
+/* div pembungkus tanpa testid di dalam stChatInput -- bawaan Streamlit
+   masih pakai secondaryBackgroundColor (tosca), dipaksa putih juga */
+[data-testid="stChatInput"] > div {background-color: #FFFFFF !important;}
+[data-testid="stChatInputSubmitButton"] {background-color: rgba(255,133,0,0.15) !important;}
 [data-testid="stChatInput"] textarea {
     background-color: #FFFFFF !important;
     border: none !important;
@@ -52,6 +56,59 @@ section[data-testid="stSidebar"] hr {border-color: #E0EE59 !important;}
     box-shadow: none !important;
     border: none !important;
 }
+
+/* Tipografi konten chat, gaya bersih & minimalis (setara Tailwind --
+   CDN Tailwind tidak jalan di sandbox markdown Streamlit, jadi ditulis
+   sebagai CSS biasa dengan hasil visual yang sama). */
+[data-testid="stChatMessageContent"] p {
+    font-size: 0.95rem;
+    line-height: 1.75;
+    letter-spacing: 0.01em;
+    color: #3f3f46;
+    margin: 0 0 1em;
+}
+[data-testid="stChatMessageContent"] p:last-child {margin-bottom: 0;}
+[data-testid="stChatMessageContent"] h1,
+[data-testid="stChatMessageContent"] h2,
+[data-testid="stChatMessageContent"] h3 {
+    color: #18181b;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 1.25em 0 0.5em;
+}
+[data-testid="stChatMessageContent"] ul,
+[data-testid="stChatMessageContent"] ol {
+    margin: 0.75em 0 1em;
+    padding-left: 1.4em;
+}
+[data-testid="stChatMessageContent"] li {
+    margin-bottom: 0.5em;
+    line-height: 1.7;
+    color: #3f3f46;
+}
+[data-testid="stChatMessageContent"] blockquote {
+    border-left: 3px solid #FF8500;
+    padding-left: 1em;
+    margin: 1em 0;
+    color: #52525b;
+    font-style: italic;
+}
+[data-testid="stChatMessageContent"] code {
+    background-color: #f4f4f5;
+    color: #3f3f46;
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+[data-testid="stChatMessageContent"] pre {
+    background-color: #f4f4f5;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    padding: 1em;
+    overflow-x: auto;
+    margin: 1em 0;
+}
+[data-testid="stChatMessageContent"] pre code {background: none; padding: 0;}
 </style>""", unsafe_allow_html=True)
 
 
