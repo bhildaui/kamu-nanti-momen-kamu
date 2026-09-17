@@ -85,19 +85,22 @@ def avatar(gender, senang):
 
 def bar_gauge(nilai):
     """Bar gaya wondr: pill oranye, badge bulat berisi persen di ujung isian,
-    bulatan emas tetap di ujung kanan sebagai penanda batas maksimum."""
+    bulatan tosca tetap di kedua ujung (awal dan batas maksimum)."""
     nilai = max(0, min(100, nilai))
     return f"""
-    <div style="position:relative;height:34px;margin:6px 0 2px;
-                background:#FBEBD3;border-radius:17px;">
-      <div style="position:absolute;left:0;top:0;height:34px;width:{nilai}%;
-                  background:linear-gradient(90deg,#F2994A,#F7C08A);border-radius:17px;"></div>
+    <div style="position:relative;height:30px;margin:6px 0 2px;
+                background:#FBEBD3;border-radius:15px;">
+      <div style="position:absolute;left:0;top:0;height:30px;width:{nilai}%;
+                  background:linear-gradient(90deg,#F2994A,#F7C08A);border-radius:15px;"></div>
+      <div style="position:absolute;left:2px;top:50%;transform:translate(0,-50%);
+                  width:20px;height:20px;border-radius:50%;background:#4FD1C5;
+                  box-shadow:0 1px 3px rgba(0,0,0,.18);"></div>
       <div style="position:absolute;left:{nilai}%;top:50%;transform:translate(-50%,-50%);
-                  width:38px;height:38px;border-radius:50%;background:#E8763C;color:white;
+                  width:36px;height:36px;border-radius:50%;background:#E8763C;color:white;
                   display:flex;align-items:center;justify-content:center;font-weight:700;
-                  font-size:11px;box-shadow:0 2px 4px rgba(0,0,0,.18);">{nilai}%</div>
+                  font-size:11px;box-shadow:0 2px 4px rgba(0,0,0,.18);z-index:2;">{nilai}%</div>
       <div style="position:absolute;right:2px;top:50%;transform:translate(0,-50%);
-                  width:24px;height:24px;border-radius:50%;background:#F4B740;
+                  width:20px;height:20px;border-radius:50%;background:#4FD1C5;
                   box-shadow:0 1px 3px rgba(0,0,0,.18);"></div>
     </div>"""
 
@@ -409,16 +412,23 @@ def halaman_wondrcast():
             kiri, kanan = st.columns([1, 2.2])
             kiri.markdown(f"**{ind['judul']}**")
             kiri.caption(ind["sub"])
+            kanan.markdown(f"<div style='display:flex;justify-content:space-between;"
+                          f"font-size:0.8rem;color:#6b7280;'><span>{ind['label_rendah']}</span>"
+                          f"<span>{ind['label_tinggi']}</span></div>", unsafe_allow_html=True)
             kanan.markdown(bar_gauge(ind["nilai"]), unsafe_allow_html=True)
-            kanan.caption(f"{ind['label_rendah']} → {ind['label_tinggi']} · {ind['posisi']}")
+            kanan.caption(ind["posisi"])
             kanan.write(ind["keterangan"])
 
-    for saran in hasil["saran_indikator"]:
-        with st.container(border=True):
-            if saran["fitur_wondr"]:
-                st.badge(saran["fitur_wondr"], color="orange")
-            st.markdown(f"**{saran['judul']}**")
-            st.write(saran["pesan"])
+    rm = hasil["roadmap"]
+    st.markdown(
+        f"""<div style="background:#FBEFD2;border-radius:14px;padding:18px 22px;margin-top:6px;">
+<p style="font-weight:700;font-size:1.05rem;margin:0 0 10px;">{rm['judul']}</p>
+<ul style="margin:0;padding-left:20px;">
+{''.join(f"<li style='margin-bottom:8px;'><b>{f['label']}</b> : {', '.join(f['aksi'])}</li>" for f in rm['fase'])}
+</ul>
+</div>""",
+        unsafe_allow_html=True,
+    )
 
     # insight LLM (B6)
     st.subheader("Insight keuangan")

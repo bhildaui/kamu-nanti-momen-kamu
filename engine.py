@@ -196,87 +196,97 @@ def _posisi(nilai, rendah, tinggi):
 def indikator_risiko(m):
     """Indikator & Metrik Risiko (WondrCast): 4 posisi 0-100 dihitung dari data
     nasabah asli, bukan angka tetap. Ambang skala memakai AMBANG yang sudah
-    dipakai metrik B5.1/B5.2 lain agar konsisten satu aplikasi."""
+    dipakai metrik B5.1/B5.2 lain agar konsisten satu aplikasi.
+    Konvensi arah: nilai TINGGI = baik (Discipline/Frugal/Good) di keempatnya,
+    nilai RENDAH = perlu perbaikan (Indulgent/Impulsive/Bad), kecuali Risk
+    Tolerance yang murni netral (tinggi = agresif, bukan "lebih baik")."""
     bulan_buffer = m["saldo"] / m["pengeluaran"] if m["pengeluaran"] else 99
 
     saving = _clamp01(m["rasio_menabung"] / (2 * AMBANG["disiplin"])) * 100
-    spending = (_clamp01(m["porsi_konsumtif"] / (2 * AMBANG["konsumtif"]))
-                + _clamp01(m["rasio_cicilan"] / (2 * AMBANG["cicilan"]))) / 2 * 100
+    boros = (_clamp01(m["porsi_konsumtif"] / (2 * AMBANG["konsumtif"]))
+             + _clamp01(m["rasio_cicilan"] / (2 * AMBANG["cicilan"]))) / 2 * 100
+    spending = 100 - boros                                   # tinggi = Frugal (baik)
     # 0.30 = pengeluaran sangat rendah (median nasabah nyata ~0,65), 100% tepat
     # di ambang label Defisit (AMBANG["defisit"]) supaya konsisten satu aplikasi.
-    kesehatan = _clamp01((m["rasio_pengeluaran"] - 0.30) / (AMBANG["defisit"] - 0.30)) * 100
+    rentan = _clamp01((m["rasio_pengeluaran"] - 0.30) / (AMBANG["defisit"] - 0.30)) * 100
+    kesehatan = 100 - rentan                                 # tinggi = Good (baik)
     risiko = (_clamp01(bulan_buffer / 6)
               + (1 - _clamp01(m["rasio_cicilan"] / AMBANG["cicilan"]))) / 2 * 100
 
     return [
         {"kode": "saving_priority", "judul": "Saving Priority",
          "sub": "Sets and meets savings goals", "nilai": round(saving),
-         "label_rendah": "Indulgent", "label_tinggi": "Discipline-driven",
-         "posisi": _posisi(saving, "Indulgent", "Discipline-driven"),
+         "label_rendah": "Indulgent", "label_tinggi": "Discipline",
+         "posisi": _posisi(saving, "Indulgent", "Discipline"),
          "keterangan": (f"Alokasi tabungan {persen(m['rasio_menabung'])} dari pemasukan, "
                         + ("tergerus pengeluaran bulanan." if saving < 50 else "cukup disiplin menuju tujuan finansial."))},
         {"kode": "spending_style", "judul": "Spending Style",
          "sub": "Avoids excessive spending", "nilai": round(spending),
-         "label_rendah": "Paced-planning", "label_tinggi": "Impulsive",
-         "posisi": _posisi(spending, "Paced-planning", "Impulsive"),
+         "label_rendah": "Impulsive", "label_tinggi": "Frugal",
+         "posisi": _posisi(spending, "Impulsive", "Frugal"),
          "keterangan": (f"Gaya hidup {persen(m['porsi_konsumtif'])} dari pengeluaran, cicilan {persen(m['rasio_cicilan'])} dari pemasukan"
-                        + (", dipicu gaya hidup serta beban cicilan." if spending >= 50 else ", masih terkendali."))},
-        {"kode": "financial_health", "judul": "Financial Health / Deficit",
+                        + (", dipicu gaya hidup serta beban cicilan." if spending < 50 else ", masih terkendali."))},
+        {"kode": "financial_health", "judul": "Financial Health",
          "sub": "Scenario projection", "nilai": round(kesehatan),
-         "label_rendah": "Fortified-secure", "label_tinggi": "Vulnerable",
-         "posisi": _posisi(kesehatan, "Fortified-secure", "Vulnerable"),
+         "label_rendah": "Bad", "label_tinggi": "Good",
+         "posisi": _posisi(kesehatan, "Bad", "Good"),
          "keterangan": (f"Pengeluaran {persen(m['rasio_pengeluaran'])} dari pemasukan"
-                        + (", ketahanan finansial melemah." if kesehatan >= 50 else ", ketahanan finansial masih terjaga."))},
+                        + (", ketahanan finansial melemah." if kesehatan < 50 else ", ketahanan finansial masih terjaga."))},
         {"kode": "risk_tolerance", "judul": "Risk Tolerance",
          "sub": "Prudent investment choices", "nilai": round(risiko),
-         "label_rendah": "Konservatif", "label_tinggi": "Agresif",
-         "posisi": _posisi(risiko, "Konservatif", "Agresif"),
+         "label_rendah": "Conservative", "label_tinggi": "Aggressive",
+         "posisi": _posisi(risiko, "Conservative", "Aggressive"),
          "keterangan": (f"Saldo setara {bulan_buffer:.1f} bulan pengeluaran dengan cicilan {persen(m['rasio_cicilan'])} dari pemasukan"
                         + (", kapasitas ambil risiko investasi rendah akibat keterbatasan likuiditas."
                            if risiko < 50 else ", kapasitas ambil risiko investasi cukup baik."))},
     ]
 
 
-def saran_indikator(indikator):
-    """Saran ringkas di bawah 4 bar Indikator & Metrik Risiko. Beda dari
-    daftar_advice (R1-R7, berbasis kejadian transaksi 30 hari): ini berbasis
-    posisi keempat indikator sekaligus, dipicu saat condong ke sisi berisiko."""
-    by_kode = {i["kode"]: i for i in indikator}
-    saran = []
+def _label_fase(a, b):
+    return f"Tahun {a}" if a == b else f"Tahun {a}–{b}"
 
-    sp = by_kode["saving_priority"]
-    if sp["nilai"] < 40:
-        saran.append({"judul": "Naikkan porsi tabungan",
-                      "pesan": f"Saving Priority masih {sp['nilai']}%, {sp['posisi'].lower()}. "
-                               "Sisihkan otomatis lewat Life Goals begitu gaji masuk.",
-                      "fitur_wondr": "Life Goals"})
 
-    ss = by_kode["spending_style"]
-    if ss["nilai"] > 60:
-        saran.append({"judul": "Kendalikan gaya hidup dan cicilan",
-                      "pesan": f"Spending Style {ss['nilai']}%, {ss['posisi'].lower()}. "
-                               "Pantau transaksi harian lewat QRIS wondr sebelum menambah cicilan baru.",
-                      "fitur_wondr": "QRIS"})
+def _fase_tahun(tahun_proyeksi):
+    """Bagi horizon proyeksi jadi sampai 4 fase (~10/20/30/40%), minimal 1 tahun
+    per fase. Untuk tahun_proyeksi=10 (default) hasilnya persis Tahun 1,
+    Tahun 2-3, Tahun 4-6, Tahun 7-10."""
+    batas, mulai = [], 1
+    for porsi in (0.1, 0.2, 0.3, 0.4):
+        if mulai > tahun_proyeksi:
+            break
+        panjang = max(1, round(tahun_proyeksi * porsi))
+        akhir = min(tahun_proyeksi, mulai + panjang - 1)
+        batas.append((mulai, akhir))
+        mulai = akhir + 1
+    return batas
 
-    fh = by_kode["financial_health"]
-    if fh["nilai"] > 60:
-        saran.append({"judul": "Perkuat ketahanan finansial",
-                      "pesan": f"Financial Health {fh['nilai']}%, {fh['posisi'].lower()}. "
-                               "Bayar tagihan tepat waktu dan tunda pengeluaran yang belum mendesak.",
-                      "fitur_wondr": "Bayar Tagihan"})
 
-    rt = by_kode["risk_tolerance"]
-    if rt["nilai"] < 30:
-        saran.append({"judul": "Bangun dulu bantalan likuiditas",
-                      "pesan": f"Risk Tolerance {rt['nilai']}%, {rt['posisi'].lower()}. "
-                               "Kuatkan dulu di Tabungan Berjangka sebelum ambil produk yang lebih berisiko.",
-                      "fitur_wondr": "Tabungan Berjangka"})
+def roadmap_finansial(m, profil, tahun_proyeksi):
+    """Insight WondrCast: peta jalan per fase tahun (bukan LLM, dihitung
+    langsung dari data supaya angkanya selalu akurat -- lihat ATURAN_UMUM
+    di llm.py yang melarang LLM membuat angka baru)."""
+    fase = _fase_tahun(tahun_proyeksi)
+    minus = m["pengeluaran"] - m["pemasukan"]
 
-    if not saran:
-        saran.append({"judul": "Kondisi finansialmu cukup seimbang",
-                      "pesan": "Keempat indikator berada di posisi yang wajar. Pertahankan kebiasaan ini.",
-                      "fitur_wondr": None})
-    return saran
+    aksi_stabilisasi = []
+    if minus > 0:
+        aksi_stabilisasi.append(f"tutup defisit {rupiah(minus)}/bulan")
+    if m["rasio_cicilan"] > AMBANG["cicilan"]:
+        aksi_stabilisasi.append(f"lunasi atau kurangi cicilan berbunga tinggi "
+                                 f"(sekarang {persen(m['rasio_cicilan'])} dari pemasukan)")
+    aksi_stabilisasi.append(f"bangun dana darurat setara {rupiah(m['pengeluaran'] * 3)} (3x pengeluaran bulanan)")
+
+    urutan = [
+        aksi_stabilisasi,
+        ["mulai sisihkan dana investasi secara rutin tiap bulan"],
+        ["perbesar portofolio investasimu -- gaji naik = investasi naik, bukan gaya hidup"],
+        [f"wujudkan tujuan hidupmu ({profil['tujuan']}) lewat Life Goals, tambah proteksi jiwa & kesehatan"],
+    ]
+    nama_depan = str(profil["nama"]).split()[0]
+    return {
+        "judul": f"Hi, {nama_depan}! Mau {tahun_proyeksi} tahunmu lebih aman? Yuk intip caranya!",
+        "fase": [{"label": _label_fase(a, b), "aksi": urutan[i]} for i, (a, b) in enumerate(fase)],
+    }
 
 
 # ---------------------------------------------------------------- B5.2 label
@@ -534,10 +544,11 @@ def analisis(tr, profil, promo, merchant, asumsi=None, klaim=None):
     kritis = any(a["level"] == "Kritis" for a in adv)
     lolos, ditahan, tidak_aktif = cocokkan_promo(tr, m, label, profil, promo, merchant, klaim, kritis)
     indikator = indikator_risiko(m)
-    return {"metrik": m, "label": label, "proyeksi": proyeksi(m, profil["usia"], asumsi),
+    pr = proyeksi(m, profil["usia"], asumsi)
+    return {"metrik": m, "label": label, "proyeksi": pr,
             "advice": adv, "kritis": kritis, "promo": lolos, "promo_ditahan": ditahan,
             "promo_tidak_aktif": tidak_aktif, "momen": urutkan_momen(adv, lolos),
-            "indikator": indikator, "saran_indikator": saran_indikator(indikator)}
+            "indikator": indikator, "roadmap": roadmap_finansial(m, profil, int(pr["tahun"]))}
 
 
 
